@@ -3,85 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppKrew | AI Prompts & Codes</title>
+    <title>AppKrew | Build Faster</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0a0a0c; --card: #16161a; --primary: #3b82f6; --text: #ffffff; --text-dim: #a1a1aa; --round: 30px; --round-sm: 18px; }
+        :root { --bg: #0a0a0c; --card: #16161a; --primary: #3b82f6; --text: #ffffff; --text-dim: #a1a1aa; --round: 30px; --round-sm: 18px; --gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; }
-        
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+        /* Floating Animation */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        /* Landing Page */
+        #landing-page { position: fixed; inset: 0; background: radial-gradient(circle at top right, #1e1b4b, #0a0a0c); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .hero-title { font-size: 3.5rem; font-weight: 800; margin-bottom: 10px; }
+        .hero-title span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-sub { color: var(--text-dim); font-size: 1.1rem; max-width: 500px; line-height: 1.6; margin-bottom: 30px; }
+        .btn-get-started { padding: 18px 40px; border-radius: 50px; border: none; background: var(--gradient); color: white; font-weight: 800; font-size: 1.1rem; cursor: pointer; box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3); display: flex; align-items: center; gap: 10px; transition: 0.3s; z-index: 10001; }
+        .btn-get-started:hover { transform: scale(1.05); }
+
+        .stats-bar { position: absolute; bottom: 40px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 15px 30px; border-radius: 20px; display: flex; gap: 40px; backdrop-filter: blur(10px); }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 1.1rem; font-weight: 800; display: block; }
+        .stat-lbl { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Floating Icons SVGs */
+        .float-icon { position: absolute; opacity: 0.6; animation: float 4s ease-in-out infinite; }
+        .icon-1 { top: 15%; left: 10%; animation-delay: 0s; color: #3b82f6; }
+        .icon-2 { top: 20%; right: 15%; animation-delay: 1s; color: #a855f7; }
+        .icon-3 { bottom: 25%; right: 10%; animation-delay: 2s; color: #ec4899; }
+
+        /* Auth Modal */
+        #auth-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 11000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { background: var(--card); width: 100%; max-width: 400px; padding: 35px; border-radius: var(--round); border: 1px solid #ffffff10; text-align: center; }
         
+        /* Main UI */
         header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(10, 10, 12, 0.8); backdrop-filter: blur(15px); z-index: 100; }
         .logo { font-weight: 800; font-size: 1.6rem; } .logo span { color: var(--primary); }
-        .notif-dot { position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 2px solid var(--bg); display: none; z-index: 6000; }
-
         .search-box { padding: 0 20px; margin: 15px 0; }
-        input, textarea { width: 100%; padding: 16px; background: var(--card); border: 1px solid #ffffff10; border-radius: var(--round-sm); color: white; outline: none; margin-bottom: 12px; transition: 0.3s; }
+        input, textarea { width: 100%; padding: 16px; background: var(--card); border: 1px solid #ffffff10; border-radius: var(--round-sm); color: white; outline: none; margin-bottom: 12px; }
         .cats { display: flex; gap: 10px; padding: 0 20px; overflow-x: auto; scrollbar-width: none; margin-bottom: 20px; }
         .cat { padding: 10px 22px; background: var(--card); border-radius: 40px; border: 1px solid #ffffff10; white-space: nowrap; cursor: pointer; font-size: 0.9rem; }
-        .cat.active { background: var(--primary); border-color: var(--primary); }
-        
+        .cat.active { background: var(--primary); }
         .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 0 20px; }
         .item-card { background: var(--card); border-radius: var(--round); overflow: hidden; border: 1px solid #ffffff10; cursor: pointer; }
         .item-thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        
         .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; overflow-y: auto; padding: 25px 25px 100px 25px; }
         .curved-box { background: var(--card); padding: 25px; border-radius: var(--round); border: 1px solid #ffffff10; margin-bottom: 20px; line-height: 1.6; }
         .btn { width: 100%; padding: 18px; border-radius: var(--round-sm); border: none; background: var(--primary); color: white; font-weight: 800; cursor: pointer; margin-top: 10px; }
-        
         nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 15, 20, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #ffffff10; z-index: 5000; }
-        .nav-item { color: var(--text-dim); text-align: center; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; position: relative; }
+        .nav-item { color: var(--text-dim); text-align: center; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item svg { width: 24px; height: 24px; }
-
-        .status { float: right; font-size: 0.7rem; padding: 4px 10px; border-radius: 10px; text-transform: uppercase; font-weight: 800; }
-        .status-pending { background: #f59e0b20; color: #f59e0b; }
-        .status-approved { background: #10b98120; color: #10b981; }
-        .status-rejected { background: #ef444420; color: #ef4444; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <div class="auth-card">
-            <h2 style="margin-bottom:20px">App<span>Krew</span></h2>
-            <input type="email" id="auth-email" placeholder="Email Address">
-            <input type="password" id="auth-pass" placeholder="Password">
-            <button class="btn" onclick="handleAuth()">Continue</button>
-            <p style="margin-top:20px; font-size:0.9rem; color:var(--text-dim)" onclick="toggleAuth()" id="auth-toggle">New user? Create account</p>
+    <!-- Landing Page -->
+    <div id="landing-page">
+        <!-- Python Icon -->
+        <svg class="float-icon icon-1" width="50" height="50" viewBox="0 0 24 24" fill="currentColor"><path d="M11.97 2c-5.5 0-5.16 2.39-5.16 2.39l.01 2.47H12.1v.35H5.06S2 7.51 2 12.89s3.06 5.38 3.06 5.38h1.83v-2.58c0-2.84 2.3-5.14 5.14-5.14h5.13V6.36s.34-4.36-5.19-4.36zm4.81 1.83v2.58c0 2.84-2.3 5.14-5.14 5.14H6.51v4.09s-.34 4.36 5.19 4.36c5.5 0 5.16-2.39 5.16-2.39l-.01-2.47H11.9v-.35h7.04s3.06-.3 3.06-5.68-3.06-5.38-3.06-5.38h-1.83z"/></svg>
+        <!-- Code Icon -->
+        <svg class="float-icon icon-2" width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <!-- Bot Icon -->
+        <svg class="float-icon icon-3" width="50" height="50" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h1V5.73c-.6-.34-1-1.01-1-1.73a2 2 0 0 1 2-2M9 9a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H9m-.5 3a1.5 1.5 0 0 1 1.5 1.5 1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5A1.5 1.5 0 0 1 8.5 12m7 0a1.5 1.5 0 0 1 1.5 1.5 1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5 1.5 1.5 0 0 1 1.5-1.5z"/></svg>
+
+        <h1 class="hero-title">App<span>Krew</span></h1>
+        <p class="hero-sub">Build faster with <b>Secret Tools</b>. Unlock the ultimate library of premium Source Codes, AI Prompts & Design Assets.</p>
+        <button class="btn-get-started" onclick="showAuth()">Get Started Now →</button>
+
+        <div class="stats-bar">
+            <div class="stat-item"><span class="stat-val">10K+</span><span class="stat-lbl">Users</span></div>
+            <div class="stat-item"><span class="stat-val">500+</span><span class="stat-lbl">Assets</span></div>
+            <div class="stat-item"><span class="stat-val">24/7</span><span class="stat-lbl">Access</span></div>
         </div>
     </div>
 
-    <header>
-        <div class="logo">App<span>Krew</span></div>
-        <div style="font-size: 0.8rem; opacity: 0.6;">v1.2</div>
-    </header>
-
-    <div class="search-box"><input type="text" id="search" placeholder="Search prompts or codes..." oninput="renderItems()"></div>
-    
-    <div class="cats">
-        <div class="cat active" onclick="setCat('All', this)">All</div>
-        <div class="cat" onclick="setCat('Prompt', this)">Prompts</div>
-        <div class="cat" onclick="setCat('Code', this)">Codes</div>
+    <!-- Auth Modal -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2 style="margin-bottom:20px">Join AppKrew</h2>
+            <input type="email" id="auth-email" placeholder="Email Address">
+            <input type="password" id="auth-pass" placeholder="Password">
+            <button class="btn" onclick="handleAuth()">Enter Platform</button>
+            <p style="margin-top:20px; font-size:0.9rem; color:var(--text-dim)" onclick="toggleAuth()" id="auth-toggle">New here? Sign Up</p>
+            <p style="margin-top:10px; font-size:0.8rem; color:var(--primary); cursor:pointer" onclick="hideAuth()">← Back</p>
+        </div>
     </div>
 
-    <div class="items-grid" id="main-grid"></div>
+    <!-- Main Content (Hidden initially) -->
+    <div id="main-content" class="hidden">
+        <header>
+            <div class="logo">App<span>Krew</span></div>
+            <div style="font-size: 0.8rem; opacity: 0.6; color: #10b981;">FREE ACCESS</div>
+        </header>
 
-    <div id="detail-overlay" class="overlay">
-        <div id="detail-content"></div>
+        <div class="search-box"><input type="text" id="search" placeholder="Search prompts or codes..." oninput="renderItems()"></div>
+        
+        <div class="cats">
+            <div class="cat active" onclick="setCat('All', this)">All</div>
+            <div class="cat" onclick="setCat('Prompt', this)">Prompts</div>
+            <div class="cat" onclick="setCat('Code', this)">Codes</div>
+        </div>
+
+        <div class="items-grid" id="main-grid"></div>
+
+        <nav>
+            <div class="nav-item active" onclick="navTo('home', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                Home
+            </div>
+            <div class="nav-item" onclick="navTo('menu', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                Menu
+            </div>
+        </nav>
     </div>
 
-    <div id="orders-overlay" class="overlay">
-        <h2 style="margin-bottom:20px">My Orders</h2>
-        <div id="orders-list"></div>
-    </div>
-
+    <!-- Overlays -->
+    <div id="detail-overlay" class="overlay"><div id="detail-content"></div></div>
     <div id="menu-overlay" class="overlay">
         <h2 style="margin-bottom:20px">Menu</h2>
         <button class="btn" style="background:var(--card); text-align:left; border:1px solid #ffffff10" onclick="showLegal('policy')">Privacy Policy</button>
@@ -89,31 +136,14 @@
         <button class="btn" style="background:var(--card); text-align:left; border:1px solid #ffffff10" onclick="showLegal('disclaimer')">Disclaimer</button>
         <button class="btn" style="background:var(--card); text-align:left; border:1px solid #ffffff10" onclick="showLegal('terms')">Terms & Conditions</button>
         <h3 style="margin:30px 0 15px 0">Feedback</h3>
-        <textarea id="feed-msg" placeholder="Tell us how we can improve..."></textarea>
+        <textarea id="feed-msg" placeholder="Tell us something..."></textarea>
         <button class="btn" onclick="sendFeedback()">Submit Feedback</button>
         <button class="btn" style="background:#ef444420; color:#ef4444; margin-top:40px" onclick="firebase.auth().signOut()">Logout Account</button>
     </div>
-
     <div id="legal-overlay" class="overlay" style="z-index:6000">
         <button onclick="this.parentElement.style.display='none'" style="background:var(--card); border:1px solid #ffffff10; color:white; padding:10px 20px; border-radius:30px; margin-bottom:20px">← Back</button>
         <div class="curved-box" id="legal-content" style="font-size:0.9rem; white-space: pre-line;"></div>
     </div>
-
-    <nav>
-        <div class="nav-item active" onclick="navTo('home', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-            Home
-        </div>
-        <div class="nav-item" onclick="navTo('orders', this)">
-            <div class="notif-dot" id="notif-dot"></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            Orders
-        </div>
-        <div class="nav-item" onclick="navTo('menu', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            Menu
-        </div>
-    </nav>
 
     <script>
         const firebaseConfig = {
@@ -129,18 +159,28 @@
         const auth = firebase.auth(), db = firebase.database();
 
         let allItems = [], currentCat = 'All', isSignUp = false;
-        const UPI_ID = "rajveery@ptyes", QR_LINK = "https://i.ibb.co/GQpSM3Py/image.png";
 
         const LEGAL = {
-            policy: `last updated: 2/1/2026\n\nWelcome to AppKrew. Your privacy is important to us.\n\nInformation We Collect\n• Name and email address\n• Payment details such as UPI ID (for verification)\n• Feedback you submit\n\nData Security\nWe use Firebase for industry-standard security.\n\nContact: y629135756@gmail.com`,
-            about: `AppKrew is built for creators and developers.\n\nOur goal:\n• Free AI prompts\n• Premium source codes\n• Secure digital access`,
-            disclaimer: `Educational purpose only. No guarantee of results. AppKrew is not responsible for any misuse of resources.`,
-            terms: `📜 Terms & Conditions\n\n1. Must be 13+ years old.\n2. No reselling of content.\n3. Non-refundable payments.\n4. Account suspension for policy violations.`
+            policy: `last updated: 2/1/2026\n\nWelcome to AppKrew. Your privacy is important to us.\n\nAt AppKrew, we collect only necessary info.\n\nInformation We Collect\n• Name and email address\n• Securing credentials via Firebase\n• Feedback messages\n\nContact: y629135756@gmail.com`,
+            about: `AppKrew is a platform for creators and developers.\n\nOur goal:\n• Free AI prompts\n• High-quality source codes\n• Simple and secure access`,
+            disclaimer: `Educational purposes only. We do not guarantee specific results. Users are responsible for content usage.`,
+            terms: `📜 Terms & Conditions\n\n1. Must be at least 13 years old.\n2. Do not misuse or resell content.\n3. Content availability may change.`
         };
 
+        // UI Helpers
+        function showAuth() { document.getElementById('auth-screen').style.display = 'flex'; }
+        function hideAuth() { document.getElementById('auth-screen').style.display = 'none'; }
+
         auth.onAuthStateChanged(user => {
-            if (user) { document.getElementById('auth-screen').classList.add('hidden'); loadData(); listenOrders(); }
-            else { document.getElementById('auth-screen').classList.remove('hidden'); }
+            if (user) { 
+                document.getElementById('landing-page').classList.add('hidden');
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-content').classList.remove('hidden');
+                loadData(); 
+            } else { 
+                document.getElementById('landing-page').classList.remove('hidden');
+                document.getElementById('main-content').classList.add('hidden');
+            }
         });
 
         function handleAuth() {
@@ -151,7 +191,7 @@
 
         function toggleAuth() { 
             isSignUp = !isSignUp; 
-            document.getElementById('auth-toggle').innerText = isSignUp ? "Have an account? Sign In" : "New user? Create account";
+            document.getElementById('auth-toggle').innerText = isSignUp ? "Have an account? Sign In" : "New here? Sign Up";
         }
 
         function loadData() {
@@ -162,7 +202,14 @@
             const grid = document.getElementById('main-grid'), s = document.getElementById('search').value.toLowerCase();
             grid.innerHTML = '';
             allItems.filter(i => (currentCat === 'All' || i.category === currentCat) && i.title.toLowerCase().includes(s)).forEach(item => {
-                grid.innerHTML += `<div class="item-card" onclick="showItem('${item.id}')"><img src="${item.thumbnail}" class="item-thumb"><div style="padding:15px"><b style="font-size:0.9rem">${item.title}</b><br><span style="color:var(--primary); font-weight:800">${item.category=='Code'?'₹'+item.discountPrice:'FREE'}</span></div></div>`;
+                grid.innerHTML += `
+                    <div class="item-card" onclick="showItem('${item.id}')">
+                        <img src="${item.thumbnail}" class="item-thumb">
+                        <div style="padding:15px">
+                            <b>${item.title}</b><br>
+                            <span style="color:#10b981; font-weight:800; font-size:0.8rem">FREE ACCESS</span>
+                        </div>
+                    </div>`;
             });
         }
 
@@ -171,42 +218,12 @@
             document.getElementById('detail-content').innerHTML = `
                 <div class="curved-box">
                     <img src="${i.thumbnail}" style="width:100%; border-radius:20px; margin-bottom:15px">
-                    <h2>${i.title}</h2><p style="color:var(--text-dim); margin:10px 0">${i.description}</p>
-                    ${i.category === 'Prompt' ? `<button class="btn" onclick="window.open('${i.link}')">Open Prompt Link</button>` : `
-                        <div style="background:#222; padding:20px; border-radius:20px; margin-top:20px; text-align:center">
-                            <p>Pay <b>₹${i.discountPrice}</b> to UPI</p>
-                            <p style="color:var(--primary); font-weight:800; font-size:1.2rem; margin:5px 0">${UPI_ID}</p>
-                            <img src="${QR_LINK}" style="width:180px; background:white; padding:10px; border-radius:15px; margin:10px auto; display:block">
-                            <input type="text" id="p-name" placeholder="Your Name">
-                            <input type="text" id="p-ref" placeholder="Transaction Ref ID">
-                            <button class="btn" onclick="submitOrder('${i.id}','${i.title}','${i.link}')">Submit Request</button>
-                        </div>`}
+                    <h2>${i.title}</h2>
+                    <p style="color:var(--text-dim); margin:10px 0">${i.description}</p>
+                    <button class="btn" onclick="window.open('${i.link}')">Get Now / Open Link</button>
+                    <button class="btn" style="background:#222; margin-top:10px" onclick="closeOverlays()">← Back</button>
                 </div>`;
             document.getElementById('detail-overlay').style.display = 'block';
-        }
-
-        function submitOrder(itemId, title, link) {
-            const name = document.getElementById('p-name').value, ref = document.getElementById('p-ref').value;
-            if(!name || !ref) return alert("Fill all fields");
-            db.ref('orders').push({
-                userId: auth.currentUser.uid, userEmail: auth.currentUser.email, userName: name, userRef: ref,
-                itemId, itemTitle: title, itemLink: link, status: 'pending', timestamp: Date.now(), notified: false
-            }).then(() => { alert("Payment request sent!"); document.getElementById('detail-overlay').style.display='none'; });
-        }
-
-        function listenOrders() {
-            db.ref('orders').orderByChild('userId').equalTo(auth.currentUser.uid).on('value', snap => {
-                const list = document.getElementById('orders-list'); list.innerHTML = '';
-                let showDot = false;
-                if(snap.val()) {
-                    Object.values(snap.val()).reverse().forEach(o => {
-                        if(o.notified === false && o.status !== 'pending') showDot = true;
-                        list.innerHTML += `<div class="curved-box"><span class="status status-${o.status}">${o.status}</span><b>${o.itemTitle}</b>
-                        ${o.status=='approved'?`<button class="btn" style="padding:10px; font-size:0.8rem" onclick="window.open('${o.itemLink}')">Access Code</button>`:''}</div>`;
-                    });
-                }
-                document.getElementById('notif-dot').style.display = showDot ? 'block' : 'none';
-            });
         }
 
         function navTo(page, el) {
@@ -214,11 +231,6 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
             if(page !== 'home') document.getElementById(page + '-overlay').style.display = 'block';
-            if(page === 'orders') {
-                db.ref('orders').orderByChild('userId').equalTo(auth.currentUser.uid).once('value', s => {
-                    s.forEach(c => { if(c.val().notified === false) c.ref.update({notified: true}); });
-                });
-            }
         }
 
         function showLegal(type) {
@@ -233,6 +245,7 @@
                 alert("Feedback sent!"); document.getElementById('feed-msg').value = '';
             });
         }
+        function closeOverlays() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); }
         function setCat(c, el) { currentCat = c; document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderItems(); }
     </script>
 </body>
